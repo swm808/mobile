@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "$0")/scripts/env.sh"
+exec "$MOBILE_ROOT/gradlew" -p "$MOBILE_ROOT" "$@"
