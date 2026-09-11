@@ -1,6 +1,6 @@
 # CityBond Android
 
-当前批次 B01：基础 UI、路由、网络请求库与开发环境。采用单个 `app` 模块，业务页面明确标为未接入；没有登录、聊天或正式业务写入。
+当前已完成基础框架、核心数据模型、项目台账与债务管理 UI 演示。业务页面使用本地内存数据；没有登录、聊天或正式业务写入。
 
 项目目录：`/home/tdy/projects/mobile`。本机使用 **VS Code + WSL 命令行构建 + 官方 Android 模拟器**。Android Studio IDE 未在本批安装。
 
@@ -90,7 +90,7 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 ./mobilew :app:connectedDebugAndroidTest
 ```
 
-网络单测覆盖健康检查路径/解析、不发送认证信息、HTTP 错误不重试、响应缺字段以及不接受携带凭证的服务地址。设备测试覆盖五个导航入口与连接检查页返回。
+网络单测覆盖健康检查路径/解析、不发送认证信息、HTTP 错误不重试、响应缺字段以及不接受携带凭证的服务地址。设备测试覆盖五个导航入口、连接检查页返回、项目深层路由与空表单校验。
 
 在软件模拟器与 Gradle 同时运行导致内存紧张时，可先构建完，再 `./mobilew --stop` 释放构建后台内存，然后安装和操作模拟器。
 
@@ -99,7 +99,14 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 | 位置 | 职责 |
 | --- | --- |
 | `app/src/main/java/com/citybond/mobile/MainActivity.kt` | Activity 与 Compose 入口 |
-| `.../ui/CityBondApp.kt` | 基础 UI、五个一级路由和连接检查子路由 |
+| `.../ui/CityBondApp.kt` | 应用框架、五个一级入口与 NavHost |
+| `.../ui/AppRoutes.kt` | 集中的顶层、项目与债务深层路由配置 |
+| `.../ui/ProjectScreens.kt` | 项目目录、筛选列表、分栏详情及新建/编辑表单 |
+| `.../ui/ProjectComponents.kt` | 项目卡片、阶段标签、信息行和内容分区组件 |
+| `.../ui/ProjectUiModels.kt` | 项目管理展示模型与运行期演示数据 |
+| `.../ui/DebtScreens.kt` | 债务台账、待完善列表、分栏详情及三步表单 |
+| `.../ui/DebtComponents.kt` | 债务卡片、状态标签与展示名称组件 |
+| `.../ui/DebtUiModels.kt` | 债务管理展示模型与运行期演示数据 |
 | `.../ui/Theme.kt` | 浅色/深色主题 |
 | `.../ui/ConnectionScreen.kt` | 开发用连接检查及 ViewModel 状态 |
 | `.../network/NetworkClient.kt` | 可复用 OkHttp、Retrofit 与健康检查合同 |
@@ -114,6 +121,7 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 **文档与批次约束**
 
 - [开发进度与验证结果](docs/开发进度.md)
+- [核心数据模型与 Mock 使用说明](app/src/debug/java/com/citybond/mobile/mock/README.md)
 - [技术栈与业务模块对照（学习速查）](docs/技术栈与业务模块对照.md)
 - [小批次开发约定](AGENTS.md)
 - [移动端需求文档](docs/移动端需求文档.md)
