@@ -1,6 +1,6 @@
 # CityBond Android
 
-当前已完成基础框架、核心数据模型、项目台账与债务管理 UI 演示。业务页面使用本地内存数据；没有登录、聊天或正式业务写入。
+当前保留基础框架、核心数据模型和开发用连接检查。旧的项目、债务、日历统计与 AI 文档 Mock UI 已移除；已按远端 develop `a7da695f` 的运行时 OpenAPI 与权限目录 v3 同步 16 个菜单模块、33 个权限功能组。融资总览已搭建无 Mock 数值的 UI 与子路由，其余目录仍是只读覆盖清单；目前没有登录、聊天或正式业务读写。
 
 项目目录：`/home/tdy/projects/mobile`。本机使用 **VS Code + WSL 命令行构建 + 官方 Android 模拟器**。Android Studio IDE 未在本批安装。
 
@@ -13,7 +13,7 @@
 | Kotlin | 2.2.20，Compose 与 Serialization 插件同版本 |
 | Android | minSdk 26，compileSdk / targetSdk 36，Build Tools 35.0.0 |
 | UI | Compose BOM 2025.09.01、Material 3、浅色/深色主题 |
-| 路由 | Navigation Compose 2.9.5，首页 / 业务 / 助手 / 任务 / 我的 |
+| 路由 | Navigation Compose 2.9.5，五个一级入口及融资总览、公告、待办、每日到账、月份还款、项目进度子路由 |
 | 网络 | Retrofit 3.0.0、OkHttp 4.12.0、Kotlin Serialization 1.9.0 |
 | 本机模拟器 | `CityBond_API_30`，Android 11 / API 30，720 × 1280，KVM 硬件加速 |
 | 应用标识 | `com.citybond.mobile`；调试版为 `com.citybond.mobile.debug`，可在下一批按正式包名调整 |
@@ -90,7 +90,7 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 ./mobilew :app:connectedDebugAndroidTest
 ```
 
-网络单测覆盖健康检查路径/解析、不发送认证信息、HTTP 错误不重试、响应缺字段以及不接受携带凭证的服务地址。设备测试覆盖五个导航入口、连接检查页返回、项目深层路由与空表单校验。
+网络单测覆盖健康检查路径/解析、不发送认证信息、HTTP 错误不重试、响应缺字段以及不接受携带凭证的服务地址。设备测试覆盖五个导航入口、业务重建状态、连接检查页，以及融资总览的入口、参数化子路由与返回栈。
 
 在软件模拟器与 Gradle 同时运行导致内存紧张时，可先构建完，再 `./mobilew --stop` 释放构建后台内存，然后安装和操作模拟器。
 
@@ -100,13 +100,9 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 | --- | --- |
 | `app/src/main/java/com/citybond/mobile/MainActivity.kt` | Activity 与 Compose 入口 |
 | `.../ui/CityBondApp.kt` | 应用框架、五个一级入口与 NavHost |
-| `.../ui/AppRoutes.kt` | 集中的顶层、项目与债务深层路由配置 |
-| `.../ui/ProjectScreens.kt` | 项目目录、筛选列表、分栏详情及新建/编辑表单 |
-| `.../ui/ProjectComponents.kt` | 项目卡片、阶段标签、信息行和内容分区组件 |
-| `.../ui/ProjectUiModels.kt` | 项目管理展示模型与运行期演示数据 |
-| `.../ui/DebtScreens.kt` | 债务台账、待完善列表、分栏详情及三步表单 |
-| `.../ui/DebtComponents.kt` | 债务卡片、状态标签与展示名称组件 |
-| `.../ui/DebtUiModels.kt` | 债务管理展示模型与运行期演示数据 |
+| `.../ui/BusinessCatalog.kt` | develop 权限目录 v3 的菜单/功能组合同；融资总览可进入 UI，其余模块保持只读状态 |
+| `.../ui/AppRoutes.kt` | 一级路由、融资总览子路由、参数名、构建方法及标题配置 |
+| `.../ui/FinancingOverviewScreen.kt` | 融资总览与公告、待办、每日到账、月份还款、项目进度空状态 UI |
 | `.../ui/Theme.kt` | 浅色/深色主题 |
 | `.../ui/ConnectionScreen.kt` | 开发用连接检查及 ViewModel 状态 |
 | `.../network/NetworkClient.kt` | 可复用 OkHttp、Retrofit 与健康检查合同 |
@@ -125,7 +121,9 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 - [技术栈与业务模块对照（学习速查）](docs/技术栈与业务模块对照.md)
 - [小批次开发约定](AGENTS.md)
 - [移动端需求文档](docs/移动端需求文档.md)
+- [develop 后端驱动的移动端重建设计](docs/develop后端驱动重建设计.md)
 - [业务重难点与全功能展示方案](docs/Android业务重难点与全功能展示方案.md)
+- [develop 后端运行时接口合同清单](docs/develop后端接口清单.md)
 - [develop 后端静态路由清单](docs/develop后端静态路由清单.md)
 
 本项目已初始化独立 Git 仓库。SDK、缓存、APK、AVD、`local.properties` 和签名材料不提交。换机器需重新安装对应工具；不要把当前 Linux SDK 路径直接交给 Windows 版 Android Studio 使用。

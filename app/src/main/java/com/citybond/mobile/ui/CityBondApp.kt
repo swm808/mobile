@@ -1,136 +1,297 @@
 package com.citybond.mobile.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.citybond.mobile.BuildConfig
+import java.time.LocalDate
+import java.time.YearMonth
 
-private enum class Destination(val route: String, val label: String, val icon: ImageVector) {
-    HOME(AppRoutes.HOME, "首页", Icons.Outlined.Home), BUSINESS(AppRoutes.BUSINESS, "业务", Icons.Outlined.Menu),
-    ASSISTANT(AppRoutes.ASSISTANT, "助手", Icons.Outlined.Create), TASKS(AppRoutes.TASKS, "任务", Icons.AutoMirrored.Outlined.List),
+private enum class Destination(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+) {
+    HOME(AppRoutes.HOME, "首页", Icons.Outlined.Home),
+    BUSINESS(AppRoutes.BUSINESS, "业务", Icons.Outlined.Menu),
+    ASSISTANT(AppRoutes.ASSISTANT, "助手", Icons.Outlined.Create),
+    TASKS(AppRoutes.TASKS, "任务", Icons.AutoMirrored.Outlined.List),
     PROFILE(AppRoutes.PROFILE, "我的", Icons.Outlined.Person),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun CityBondApp() {
+@Composable
+fun CityBondApp() {
     val navController = rememberNavController()
-    val projects = remember { demoProjectRecords() }
-    val debts = remember { demoDebtRecords() }
-    val route = navController.currentBackStackEntryAsState().value?.destination?.route
-    val isRoot = Destination.entries.any { it.route == route }
-    val selected = Destination.entries.firstOrNull { it.route == route } ?: Destination.BUSINESS
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    val isTopLevel = route == null || route in AppRoutes.topLevelRoutes
+    val selected = Destination.entries.firstOrNull { it.route == route }
+        ?: if (route?.startsWith(AppRoutes.FINANCING_OVERVIEW) == true) Destination.BUSINESS else Destination.HOME
+    val openTab: (Destination) -> Unit = { destination ->
+        navController.navigate(destination.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text(routeTitle(route)) }, navigationIcon = {
-            if (!isRoot) IconButton({ navController.popBackStack() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
-        }) },
-        bottomBar = { if (isRoot) AppBottomBar(selected) { navController.openTab(it) } },
-    ) { padding -> AppNavHost(navController, projects, debts, Modifier.padding(padding)) }
-}
-
-private fun routeTitle(route: String?) = when (route) {
-    AppRoutes.HOME -> "首页"; AppRoutes.BUSINESS -> "业务"; AppRoutes.ASSISTANT -> "助手"
-    AppRoutes.TASKS -> "任务"; AppRoutes.PROFILE -> "我的"; AppRoutes.CONNECTION -> "连接检查"
-    AppRoutes.PROJECTS -> "项目台账"; AppRoutes.PROJECT_CREATE -> "新建项目"
-    AppRoutes.PROJECT_DETAIL -> "项目详情"; AppRoutes.PROJECT_EDIT -> "编辑项目"
-    AppRoutes.DEBTS -> "债务台账"; AppRoutes.DEBT_CREATE -> "新增债务"; AppRoutes.DEBT_INCOMPLETE -> "待完善债务"
-    AppRoutes.DEBT_DETAIL -> "债务详情"; AppRoutes.DEBT_EDIT -> "编辑债务"; else -> "CityBond"
-}
-
-@Composable private fun AppBottomBar(selected: Destination, open: (Destination) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Destination.entries.forEach { item -> NavigationBarItem(selected == item, { open(item) },
-            { Icon(item.icon, null) }, label = { Text(item.label) }, modifier = Modifier.testTag("tab_${item.route}")) }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(AppRoutes.titleFor(route))
+                        if (isTopLevel) {
+                            Text(
+                                "CITYBOND",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
+                navigationIcon = {
+                    if (!isTopLevel) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回")
+                        }
+                    }
+                },
+            )
+        },
+        bottomBar = {
+            if (isTopLevel) {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                    Destination.entries.forEach { destination ->
+                        NavigationBarItem(
+                            selected = selected == destination,
+                            onClick = { openTab(destination) },
+                            icon = { Icon(destination.icon, contentDescription = null) },
+                            label = { Text(destination.label) },
+                            modifier = Modifier.testTag("tab_${destination.route}"),
+                        )
+                    }
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = AppRoutes.HOME,
+            modifier = Modifier.padding(padding),
+        ) {
+            composable(AppRoutes.HOME) {
+                HomeScreen(openBusiness = { openTab(Destination.BUSINESS) })
+            }
+            composable(AppRoutes.BUSINESS) {
+                BusinessCatalogScreen { moduleRoute -> navController.navigate(moduleRoute) }
+            }
+            composable(AppRoutes.FINANCING_OVERVIEW) {
+                FinancingOverviewScreen(
+                    openAnnouncements = { navController.navigate(AppRoutes.FINANCING_ANNOUNCEMENTS) },
+                    openPendingItems = { navController.navigate(AppRoutes.FINANCING_PENDING_ITEMS) },
+                    openDailyDisbursements = {
+                        navController.navigate(AppRoutes.financingDailyDisbursements(it))
+                    },
+                    openRepaymentMonth = {
+                        navController.navigate(AppRoutes.financingRepaymentMonth(it))
+                    },
+                    openProjectPipeline = {
+                        navController.navigate(AppRoutes.financingProjectPipeline(it))
+                    },
+                )
+            }
+            composable(AppRoutes.FINANCING_ANNOUNCEMENTS) {
+                FinancingAnnouncementsScreen()
+            }
+            composable(AppRoutes.FINANCING_PENDING_ITEMS) {
+                FinancingPendingItemsScreen()
+            }
+            composable(
+                route = AppRoutes.FINANCING_DAILY_DISBURSEMENTS,
+                arguments = listOf(
+                    navArgument(AppRoutes.FINANCING_DAILY_DATE_ARGUMENT) { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val date = backStackEntry.arguments
+                    ?.getString(AppRoutes.FINANCING_DAILY_DATE_ARGUMENT)
+                    ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                FinancingDailyDisbursementsScreen(date)
+            }
+            composable(
+                route = AppRoutes.FINANCING_REPAYMENT_MONTH,
+                arguments = listOf(
+                    navArgument(AppRoutes.FINANCING_REPAYMENT_MONTH_ARGUMENT) { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val month = backStackEntry.arguments
+                    ?.getString(AppRoutes.FINANCING_REPAYMENT_MONTH_ARGUMENT)
+                    ?.let { runCatching { YearMonth.parse(it) }.getOrNull() }
+                FinancingRepaymentMonthScreen(month)
+            }
+            composable(
+                route = AppRoutes.FINANCING_PROJECT_PIPELINE,
+                arguments = listOf(
+                    navArgument(AppRoutes.FINANCING_PIPELINE_ARGUMENT) { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val category = FinancingPipelineRoute.fromPath(
+                    backStackEntry.arguments?.getString(AppRoutes.FINANCING_PIPELINE_ARGUMENT),
+                )
+                FinancingProjectPipelineScreen(category)
+            }
+            composable(AppRoutes.ASSISTANT) {
+                PlaceholderPage(
+                    title = "助手正在重新设计",
+                    description = "对话功能将在隐私、工作流权限和业务草稿合同通过验收后接入。",
+                    icon = Icons.Outlined.Create,
+                )
+            }
+            composable(AppRoutes.TASKS) {
+                PlaceholderPage(
+                    title = "任务服务尚未接入",
+                    description = "OCR、填表、导出等任务将按服务端真实生命周期统一展示。",
+                    icon = Icons.AutoMirrored.Outlined.List,
+                )
+            }
+            composable(AppRoutes.PROFILE) {
+                ProfileScreen(
+                    openConnection = {
+                        navController.navigate(AppRoutes.CONNECTION) { launchSingleTop = true }
+                    },
+                )
+            }
+            if (BuildConfig.DEBUG) {
+                composable(AppRoutes.CONNECTION) { ConnectionScreen() }
+            }
+        }
     }
 }
 
-private fun NavHostController.openTab(destination: Destination) = navigate(destination.route) {
-    popUpTo(graph.findStartDestination().id) { saveState = true }; launchSingleTop = true; restoreState = true
-}
-
-@Composable private fun AppNavHost(nav: NavHostController, projects: MutableList<ProjectUiRecord>, debts: MutableList<DebtUiRecord>, modifier: Modifier) {
-    NavHost(nav, AppRoutes.HOME, modifier) {
-        composable(AppRoutes.HOME) { HomeScreen { nav.openTab(Destination.BUSINESS) } }
-        composable(AppRoutes.BUSINESS) { BusinessScreen({ nav.navigate(AppRoutes.PROJECTS) }, { nav.navigate(AppRoutes.DEBTS) }) }
-        composable(AppRoutes.PROJECTS) { ProjectListScreen(projects, { nav.navigate(AppRoutes.projectDetail(it)) },
-            { nav.navigate(AppRoutes.PROJECT_CREATE) }) }
-        composable(AppRoutes.PROJECT_CREATE) { ProjectFormScreen(null) { project ->
-            projects.add(0, project); nav.navigate(AppRoutes.projectDetail(project.project.id)) { popUpTo(AppRoutes.PROJECTS) }
-        } }
-        composable(AppRoutes.PROJECT_DETAIL) { entry ->
-            val id = entry.arguments?.getString("projectId")
-            ProjectDetailScreen(projects.find { it.project.id == id }) { nav.navigate(AppRoutes.projectEdit(it)) }
-        }
-        composable(AppRoutes.PROJECT_EDIT) { entry ->
-            val id = entry.arguments?.getString("projectId")
-            ProjectFormScreen(projects.find { it.project.id == id }) { updated ->
-                projects.indexOfFirst { it.project.id == updated.project.id }.takeIf { it >= 0 }?.let { projects[it] = updated }
-                nav.popBackStack()
-            }
-        }
-        composable(AppRoutes.DEBTS) { DebtListScreen(debts, { nav.navigate(AppRoutes.debtDetail(it)) },
-            { nav.navigate(AppRoutes.DEBT_CREATE) }, { nav.navigate(AppRoutes.DEBT_INCOMPLETE) }) }
-        composable(AppRoutes.DEBT_CREATE) { DebtFormScreen(null) { debt ->
-            debts.add(0, debt); nav.navigate(AppRoutes.debtDetail(debt.debt.id)) { popUpTo(AppRoutes.DEBTS) }
-        } }
-        composable(AppRoutes.DEBT_INCOMPLETE) { IncompleteDebtScreen(debts) { nav.navigate(AppRoutes.debtEdit(it)) } }
-        composable(AppRoutes.DEBT_DETAIL) { entry ->
-            val id = entry.arguments?.getString("debtId")
-            DebtDetailScreen(debts.find { it.debt.id == id }) { nav.navigate(AppRoutes.debtEdit(it)) }
-        }
-        composable(AppRoutes.DEBT_EDIT) { entry ->
-            val id = entry.arguments?.getString("debtId")
-            DebtFormScreen(debts.find { it.debt.id == id }) { updated ->
-                debts.indexOfFirst { it.debt.id == updated.debt.id }.takeIf { it >= 0 }?.let { debts[it] = updated }
-                nav.popBackStack()
-            }
-        }
-        composable(AppRoutes.ASSISTANT) { PlaceholderPage("助手尚未接入", "对话功能将在独立批次开发。", Icons.Outlined.Create) }
-        composable(AppRoutes.TASKS) { PlaceholderPage("任务服务尚未接入", "后续可在这里跟踪上传、识别与导出进度。", Icons.AutoMirrored.Outlined.List) }
-        composable(AppRoutes.PROFILE) { ProfileScreen { nav.navigate(AppRoutes.CONNECTION) { launchSingleTop = true } } }
-        if (BuildConfig.DEBUG) composable(AppRoutes.CONNECTION) { ConnectionScreen() }
-    }
-}
-
-@Composable private fun HomeScreen(openBusiness: () -> Unit) = PageContent {
+@Composable
+private fun HomeScreen(openBusiness: () -> Unit) = PageContent {
     Text("随时开启你的工作", style = MaterialTheme.typography.headlineMedium)
-    Text("项目、融资与协同，一个入口。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+        "项目、融资与协同，一个入口。",
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Icon(Icons.Outlined.Home, null, Modifier.size(36.dp)); Text("你的移动工作台", style = MaterialTheme.typography.titleLarge)
-            Text("项目台账演示已就绪。"); Button(openBusiness) { Text("进入业务") }
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(Icons.Outlined.Home, contentDescription = null, modifier = Modifier.size(36.dp))
+            Text("你的移动工作台", style = MaterialTheme.typography.titleLarge)
+            Text("基础框架已保留，业务功能将以服务端接口、权限和状态机为准重新实现。")
+            Button(onClick = openBusiness) { Text("进入业务") }
+        }
+    }
+    Text("快捷入口", style = MaterialTheme.typography.titleMedium)
+    OutlinedCard(
+        onClick = openBusiness,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(Icons.Outlined.Menu, contentDescription = null)
+            Column {
+                Text("业务功能", style = MaterialTheme.typography.titleMedium)
+                Text("查看当前重建状态", style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
 
-@Composable private fun ProfileScreen(openConnection: () -> Unit) = PageContent {
-    Text("欢迎使用 CityBond", style = MaterialTheme.typography.headlineSmall); Text("账号功能尚未接入。")
-    if (BuildConfig.DEBUG) OutlinedCard(openConnection, Modifier.fillMaxWidth().testTag("open_connection")) {
-        Column(Modifier.padding(20.dp)) { Text("开发工具 · 连接检查"); Text("验证开发服务器连接") }
+@Composable
+private fun ProfileScreen(openConnection: () -> Unit) = PageContent {
+    Text("欢迎使用 CityBond", style = MaterialTheme.typography.headlineSmall)
+    Text("账号和权限功能尚未接入。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (BuildConfig.DEBUG) {
+        OutlinedCard(
+            onClick = openConnection,
+            modifier = Modifier.fillMaxWidth().testTag("open_connection"),
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text("开发工具 · 连接检查", style = MaterialTheme.typography.titleMedium)
+                Text("验证开发服务器连接", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
     }
     Text("版本 ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelMedium)
 }
 
-@Composable private fun PlaceholderPage(title: String, description: String, icon: ImageVector) = PageContent {
-    Icon(icon, null, Modifier.padding(top = 48.dp).size(48.dp), tint = MaterialTheme.colorScheme.primary)
-    Text(title, style = MaterialTheme.typography.headlineSmall); Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant)
+@Composable
+private fun PlaceholderPage(
+    title: String,
+    description: String,
+    icon: ImageVector,
+) = PageContent {
+    Icon(
+        icon,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 48.dp).size(48.dp),
+    )
+    Text(title, style = MaterialTheme.typography.headlineSmall)
+    Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-@Composable internal fun PageContent(content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+@Composable
+internal fun PageContent(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        content = content,
+    )
 }
