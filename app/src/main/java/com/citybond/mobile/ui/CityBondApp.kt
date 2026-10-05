@@ -1,7 +1,9 @@
 package com.citybond.mobile.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -43,7 +46,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,8 +56,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -62,10 +73,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.citybond.mobile.BuildConfig
+import com.citybond.mobile.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.math.roundToInt
 
 private enum class Destination(
     val route: String,
@@ -99,6 +112,11 @@ private fun AuthenticatedCityBondApp(
 ) {
     val navController = rememberNavController()
     var assistantSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var assistantOffsetX by rememberSaveable { mutableFloatStateOf(0f) }
+    var assistantOffsetY by rememberSaveable { mutableFloatStateOf(0f) }
+    var assistantContainerSize by remember { mutableStateOf(IntSize.Zero) }
+    var assistantFabSize by remember { mutableStateOf(IntSize.Zero) }
+    val assistantEdgeMarginPx = with(LocalDensity.current) { 18.dp.toPx() }
     val entry by navController.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val isTopLevel = route == null || route in AppRoutes.topLevelRoutes
@@ -175,7 +193,12 @@ private fun AuthenticatedCityBondApp(
             }
         },
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .onSizeChanged { assistantContainerSize = it },
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = AppRoutes.HOME,
@@ -275,6 +298,12 @@ private fun AuthenticatedCityBondApp(
                 }
             }
             if (route != null && route != AppRoutes.ASSISTANT) {
+                val horizontalMinOffset = (
+                    assistantFabSize.width + assistantEdgeMarginPx * 2 - assistantContainerSize.width
+                ).coerceAtMost(0f)
+                val verticalMinOffset = (
+                    assistantFabSize.height + assistantEdgeMarginPx * 2 - assistantContainerSize.height
+                ).coerceAtMost(0f)
                 FloatingActionButton(
                     onClick = { assistantSheetOpen = true },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -283,9 +312,33 @@ private fun AuthenticatedCityBondApp(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(18.dp)
+                        .offset {
+                            IntOffset(
+                                assistantOffsetX.coerceIn(horizontalMinOffset, 0f).roundToInt(),
+                                assistantOffsetY.coerceIn(verticalMinOffset, 0f).roundToInt(),
+                            )
+                        }
+                        .onSizeChanged { assistantFabSize = it }
+                        .pointerInput(
+                            assistantContainerSize,
+                            assistantFabSize,
+                            horizontalMinOffset,
+                            verticalMinOffset,
+                        ) {
+                            detectDragGestures { _, dragAmount ->
+                                assistantOffsetX = (assistantOffsetX + dragAmount.x)
+                                    .coerceIn(horizontalMinOffset, 0f)
+                                assistantOffsetY = (assistantOffsetY + dragAmount.y)
+                                    .coerceIn(verticalMinOffset, 0f)
+                            }
+                        }
                         .testTag("assistant_fab"),
                 ) {
-                    Icon(Icons.Outlined.Create, contentDescription = "唤醒 AI 助手")
+                    Image(
+                        painter = painterResource(R.drawable.assistant_fab_bot),
+                        contentDescription = "唤醒 AI 助手，可拖动调整位置",
+                        modifier = Modifier.size(32.dp),
+                    )
                 }
             }
         }
