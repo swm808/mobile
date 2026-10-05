@@ -43,6 +43,7 @@ class LoginGateTest {
     @Test
     fun loginIsRequiredBeforeOpeningApp() {
         compose.onNodeWithTag("app_login").assertIsDisplayed()
+        compose.onNodeWithTag("login_brand_icon").assertIsDisplayed()
         compose.onNodeWithTag("tab_home").assertDoesNotExist()
 
         compose.onNodeWithTag("login_username").performTextInput("mobile")

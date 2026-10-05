@@ -63,7 +63,7 @@ class NavigationTest {
         compose.onNodeWithTag("open_connection").performClick()
         compose.onNodeWithTag("server_address").assertIsDisplayed()
         compose.onNodeWithContentDescription("返回").performClick()
-        compose.onNodeWithText("测试用户，欢迎使用 CityBond").assertIsDisplayed()
+        compose.onNodeWithText("测试用户，欢迎使用知城智融智能体").assertIsDisplayed()
         repeat(3) { compose.onNodeWithTag("tab_home").performClick() }
         compose.onNodeWithText("你的移动工作台").assertIsDisplayed()
     }

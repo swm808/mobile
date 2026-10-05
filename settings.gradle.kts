@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "CityBondMobile"
+rootProject.name = "知城智融智能体"
 include(":app")

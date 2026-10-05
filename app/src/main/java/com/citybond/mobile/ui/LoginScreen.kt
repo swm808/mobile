@@ -18,12 +18,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -35,13 +32,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.citybond.mobile.R
 
 @Composable
 internal fun AppSessionLoadingScreen() {
@@ -61,14 +60,14 @@ internal fun AppSessionLoadingScreen() {
                 shape = RoundedCornerShape(18.dp),
             ) {
                 Text(
-                    "CB",
+                    "知融",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 13.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
             }
-            Text("CityBond", style = MaterialTheme.typography.headlineSmall)
+            Text("知城智融智能体", style = MaterialTheme.typography.headlineSmall)
             Text(
                 "正在检查登录状态…",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -101,19 +100,16 @@ internal fun AppLoginScreen(state: AssistantUiState, model: AssistantViewModel) 
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Surface(
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(20.dp),
-            ) {
-                Icon(
-                    Icons.Outlined.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.padding(15.dp).size(30.dp),
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.login_brand_logo),
+                contentDescription = "知城智融智能体图标",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .size(width = 132.dp, height = 88.dp)
+                    .testTag("login_brand_icon"),
+            )
             Text(
-                "欢迎使用 CityBond",
+                "欢迎使用知城智融智能体",
                 modifier = Modifier.padding(top = 18.dp),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -135,7 +131,7 @@ internal fun AppLoginScreen(state: AssistantUiState, model: AssistantViewModel) 
                 ) {
                     Text("账号登录", style = MaterialTheme.typography.titleLarge)
                     Text(
-                        "使用现有 CityBond 账号建立安全会话。",
+                        "使用现有账号建立安全会话。",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -186,7 +182,7 @@ internal fun AppLoginScreen(state: AssistantUiState, model: AssistantViewModel) 
                                 strokeWidth = 2.dp,
                             )
                         } else {
-                            Text("登录并进入 CityBond")
+                            Text("登录并进入知城智融智能体")
                         }
                     }
                 }

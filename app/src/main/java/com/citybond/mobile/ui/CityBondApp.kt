@@ -128,7 +128,7 @@ private fun AuthenticatedCityBondApp(
                         )
                         if (isTopLevel) {
                             Text(
-                                "CITYBOND · MOBILE",
+                                "知城智融 · 智能体",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -318,7 +318,7 @@ private fun HomeScreen(
     PageIntro(
         eyebrow = "移动工作台",
         title = "看清业务，快速行动",
-        description = "你好，${accountName.ifBlank { "CityBond 用户" }}。关键业务、数据入口和智能工具都已归位。",
+        description = "你好，${accountName.ifBlank { "用户" }}。关键业务、数据入口和智能工具都已归位。",
     )
     Box(
         modifier = Modifier
@@ -462,7 +462,7 @@ private fun ProfileScreen(
 ) = PageContent {
     PageIntro(
         eyebrow = "个人中心",
-        title = "${accountName}，欢迎使用 CityBond",
+        title = "${accountName}，欢迎使用知城智融智能体",
         description = "管理当前会话，查看应用状态与开发连接。",
     )
     Surface(
@@ -487,7 +487,7 @@ private fun ProfileScreen(
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(accountName, style = MaterialTheme.typography.titleLarge)
-                Text("账号已通过 CityBond 服务验证", style = MaterialTheme.typography.bodySmall)
+                Text("账号已通过知城智融服务验证", style = MaterialTheme.typography.bodySmall)
             }
             StatusPill("已登录", StatusTone.SUCCESS)
         }

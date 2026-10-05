@@ -1,4 +1,4 @@
-# CityBond Android
+# 知城智融智能体 Android
 
 当前保留基础框架、核心数据模型和开发用连接检查。旧的项目、债务、日历统计与 AI 文档 Mock UI 已移除；已按远端 develop `a7da695f` 的运行时 OpenAPI 与权限目录 v3 同步 16 个菜单模块、33 个权限功能组。融资总览已搭建无 Mock 数值的 UI 与子路由，其余目录仍是只读覆盖清单；目前没有登录、聊天或正式业务读写。
 
@@ -64,7 +64,7 @@ adb -s emulator-5558 shell getprop sys.boot_completed
 ./scripts/install-debug.sh
 ```
 
-`sys.boot_completed` 返回 `1` 后才能安装。安装脚本将已有调试 APK 安装到 `emulator-5558`，映射本机 18080 端口并启动 CityBond。以后修改代码时重新编译，再运行安装脚本；支持将其他设备序列号作为第一个参数。
+`sys.boot_completed` 返回 `1` 后才能安装。安装脚本将已有调试 APK 安装到 `emulator-5558`，映射本机 18080 端口并启动知城智融智能体。以后修改代码时重新编译，再运行安装脚本；支持将其他设备序列号作为第一个参数。
 
 APK 输出：[app-debug.apk](app/build/outputs/apk/debug/app-debug.apk)。若文件尚未生成，先执行编译命令。
 
@@ -81,7 +81,7 @@ adb -s emulator-5558 emu kill
 
 - 默认地址 `http://127.0.0.1:18080/`，通过安装脚本中的 `adb reverse` 访问 WSL 本机 18080。
 - 如果真实后端运行于 WSL 的 8000 端口，可执行 `adb -s emulator-5558 reverse tcp:18080 tcp:8000`，然后继续使用默认地址。
-- 其他 HTTPS 服务可输入其根地址。不要填写 `/api/v1/`，现有 CityBond 健康检查在根路径 `/health`。
+- 其他 HTTPS 服务可输入其根地址。不要填写 `/api/v1/`，现有知城智融服务健康检查在根路径 `/health`。
 - 调试版 HTTP 仅放行 localhost、127.0.0.1、10.0.2.2；正式版保持 HTTPS。没有加入全局信任所有证书或请求正文日志。
 - 基础框架仅有健康检查，不宣称完成真实业务接口联调。
 
@@ -93,7 +93,7 @@ printf '{"status":"ok","service":"local-network-smoke-test"}\n' > .tooling/smoke
 python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 ```
 
-示例服务只验证请求链路，不是真实 CityBond 后端。已有人使用 18080 时不要重复启动；运行服务的终端按 Ctrl+C 停止。
+示例服务只验证请求链路，不是真实知城智融后端。已有人使用 18080 时不要重复启动；运行服务的终端按 Ctrl+C 停止。
 
 **检查命令**
 

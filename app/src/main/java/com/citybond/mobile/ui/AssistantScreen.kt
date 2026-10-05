@@ -115,7 +115,7 @@ class AssistantViewModel(
                 if (error.code() == 401) showLoggedOut() else showError(error)
             } catch (_: IOException) {
                 mutableState.update {
-                    it.copy(checkingSession = false, errorMessage = "无法连接 CityBond 服务")
+                    it.copy(checkingSession = false, errorMessage = "无法连接知城智融服务")
                 }
             }
         }
@@ -343,7 +343,7 @@ private fun AssistantExperience(
             shape = RoundedCornerShape(12.dp),
         ) {
             Text(
-                "对话及上下文将保存到 CityBond 服务器，并遵循服务器日志与保留策略。",
+                "对话及上下文将保存到知城智融服务器，并遵循服务器日志与保留策略。",
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -451,7 +451,7 @@ private fun ColumnScope.AssistantChat(state: AssistantUiState, model: AssistantV
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("你好，我是 CityBond AI 助手", style = MaterialTheme.typography.titleMedium)
+            Text("你好，我是知城智融智能体", style = MaterialTheme.typography.titleMedium)
             Text(
                 "可以询问融资、债务和项目管理问题。",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

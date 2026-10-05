@@ -45,7 +45,7 @@ object AppRoutes {
         FINANCING_PROJECT_PIPELINE to "融资项目进度",
     )
 
-    fun titleFor(routePattern: String?): String = titles[routePattern] ?: "CityBond"
+    fun titleFor(routePattern: String?): String = titles[routePattern] ?: "知城智融智能体"
 
     fun financingDailyDisbursements(date: LocalDate): String =
         "$FINANCING_ROOT/daily-disbursements/$date"
