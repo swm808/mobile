@@ -105,7 +105,7 @@ internal fun AppLoginScreen(state: AssistantUiState, model: AssistantViewModel) 
                 contentDescription = "知城智融智能体图标",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(width = 132.dp, height = 88.dp)
+                    .size(132.dp)
                     .testTag("login_brand_icon"),
             )
             Text(

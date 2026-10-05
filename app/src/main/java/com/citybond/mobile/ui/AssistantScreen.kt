@@ -56,6 +56,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.json.JSONObject
 import retrofit2.HttpException
 
@@ -153,8 +157,11 @@ class AssistantViewModel(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: HttpException) {
-                mutableState.update { it.copy(loggingIn = false, errorMessage = apiErrorMessage(error)) }
-                if (error.code() == 428 || error.code() == 401) loadCaptcha()
+                val errorBody = errorResponseBody(error)
+                mutableState.update {
+                    it.copy(loggingIn = false, errorMessage = apiErrorMessage(error, errorBody))
+                }
+                if (error.code() == 428 || captchaIsRequired(errorBody)) loadCaptcha()
             } catch (_: IOException) {
                 mutableState.update { it.copy(loggingIn = false, errorMessage = "登录失败，请检查服务连接") }
             }
@@ -552,7 +559,19 @@ private fun AssistantError(message: String?, dismiss: () -> Unit) {
     }
 }
 
-private fun apiErrorMessage(error: HttpException): String {
+private fun errorResponseBody(error: HttpException): String? =
+    runCatching { error.response()?.errorBody()?.string() }.getOrNull()
+
+internal fun captchaIsRequired(body: String?): Boolean = runCatching {
+    Json.parseToJsonElement(body.orEmpty())
+        .jsonObject["detail"]
+        ?.jsonObject
+        ?.get("captchaRequired")
+        ?.jsonPrimitive
+        ?.booleanOrNull == true
+}.getOrDefault(false)
+
+private fun apiErrorMessage(error: HttpException, errorBody: String? = null): String {
     val fallback = when (error.code()) {
         401 -> "用户名或密码错误，请重新输入"
         403 -> "当前账号没有执行此操作的权限"
@@ -562,7 +581,7 @@ private fun apiErrorMessage(error: HttpException): String {
         502 -> "AI 服务暂时不可用，请稍后重试"
         else -> "服务返回 HTTP ${error.code()}"
     }
-    val body = runCatching { error.response()?.errorBody()?.string() }.getOrNull() ?: return fallback
+    val body = errorBody ?: errorResponseBody(error) ?: return fallback
     return runCatching {
         val detail = JSONObject(body).opt("detail")
         when (detail) {
