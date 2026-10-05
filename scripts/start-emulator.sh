@@ -8,6 +8,9 @@ if [[ -e /dev/kvm && ! -w /dev/kvm ]] && id -nG "$(id -un)" | tr ' ' '\n' | grep
 fi
 export ANDROID_AVD_HOME="$MOBILE_ROOT/.tooling/android-user/avd"
 export LD_LIBRARY_PATH="$MOBILE_ROOT/.tooling/linux-libs/usr/lib/x86_64-linux-gnu:$MOBILE_ROOT/.tooling/linux-libs/usr/lib/x86_64-linux-gnu/pulseaudio${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Android Emulator does not ship a Wayland Qt plugin in this toolchain. Force
+# the WSLg X11 path and disable pointer recentering to avoid an invisible cursor.
+export QT_QPA_PLATFORM=xcb
 EMULATOR_ACCEL=auto
 if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
     EMULATOR_ACCEL=off
@@ -15,4 +18,4 @@ if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
 fi
 exec "$ANDROID_HOME/emulator/emulator" -avd CityBond_API_30 -port 5558 \
     -accel "$EMULATOR_ACCEL" -gpu swiftshader -no-audio -no-snapshot -no-boot-anim -no-metrics \
-    -camera-back none -camera-front none "$@"
+    -camera-back none -camera-front none -no-mouse-reposition "$@"

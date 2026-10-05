@@ -2,7 +2,7 @@
 
 当前保留基础框架、核心数据模型和开发用连接检查。旧的项目、债务、日历统计与 AI 文档 Mock UI 已移除；已按远端 develop `a7da695f` 的运行时 OpenAPI 与权限目录 v3 同步 16 个菜单模块、33 个权限功能组。融资总览已搭建无 Mock 数值的 UI 与子路由，其余目录仍是只读覆盖清单；目前没有登录、聊天或正式业务读写。
 
-项目目录：`/home/tdy/projects/mobile`。本机使用 **VS Code + WSL 命令行构建 + 官方 Android 模拟器**。Android Studio IDE 未在本批安装。
+项目目录：`/home/tdy/projects/mobile`。本机使用 **VS Code + WSL 命令行构建**；Android Studio 仅用于 Compose Preview，官方 Android 模拟器集中用于批次收尾验证。
 
 **已配置的技术栈**
 
@@ -13,6 +13,7 @@
 | Kotlin | 2.2.20，Compose 与 Serialization 插件同版本 |
 | Android | minSdk 26，compileSdk / targetSdk 36，Build Tools 35.0.0 |
 | UI | Compose BOM 2025.09.01、Material 3、浅色/深色主题 |
+| Compose Preview | Android Studio Quail 4 / 2026.1.4 Patch 1，项目内安装，IDE 最大堆 1.5 GiB |
 | 路由 | Navigation Compose 2.9.5，五个一级入口及融资总览、公告、待办、每日到账、月份还款、项目进度子路由 |
 | 网络 | Retrofit 3.0.0、OkHttp 4.12.0、Kotlin Serialization 1.9.0 |
 | 本机模拟器 | `CityBond_API_30`，Android 11 / API 30，720 × 1280，KVM 硬件加速 |
@@ -30,6 +31,19 @@ cd /home/tdy/projects/mobile
 ```
 
 `mobilew` 自动加载 `scripts/env.sh`，使用项目内 JDK、SDK 和 Gradle 缓存，不修改系统 PATH 或 shell 配置。首次解析依赖需要联网。其他已配置 JDK/SDK 的标准 Android 环境可直接使用 `./gradlew`。
+
+**Compose 无模拟器预览**
+
+日常编辑仍使用 VS Code；Android Studio 仅用于官方 Compose Preview，不需要启动 AVD。已校验安装的 Linux 版 Android Studio 位于已忽略的 `.tooling/android-studio/`，IDE 配置与缓存放在 `.tooling/android-studio-user/`；启动脚本将 IDE 最大堆限制为 1.5 GiB。启动：
+
+```bash
+cd /home/tdy/projects/mobile
+./scripts/android-studio.sh
+```
+
+首次启动时在 Android Studio 的许可/初始化界面中由使用者自行确认；不要新建 SDK 或 AVD，项目会复用 `local.properties` 指向的 `.tooling/android-sdk`。等待 Gradle Sync 完成后，打开 `app/src/debug/java/com/citybond/mobile/ui/ComposePreviews.kt`，在编辑器右上角切换到 **Split** 或 **Design**。建议使用 Preview 的 Focus 模式，一次只渲染一个页面。
+
+预览入口仅位于 debug 源集，当前包含融资总览的浅色/深色状态、业务目录和综合台账。它们不请求网络、不构造 ViewModel，也不进入 Release APK。Preview 只用于布局与静态状态检查；路由、键盘、权限、网络和真实交互仍在每批收尾时集中用模拟器验证。
 
 打开一个终端启动模拟器，并保持该终端运行：
 
@@ -105,11 +119,12 @@ python3 -m http.server 18080 --bind 127.0.0.1 --directory .tooling/smoke-http
 | `.../ui/FinancingOverviewScreen.kt` | 融资总览与公告、待办、每日到账、月份还款、项目进度空状态 UI |
 | `.../ui/Theme.kt` | 浅色/深色主题 |
 | `.../ui/ConnectionScreen.kt` | 开发用连接检查及 ViewModel 状态 |
+| `app/src/debug/.../ui/ComposePreviews.kt` | 不进入 Release 的融资总览、业务目录和综合台账预览入口 |
 | `.../network/NetworkClient.kt` | 可复用 OkHttp、Retrofit 与健康检查合同 |
 | `app/src/debug/` | 仅调试版使用的本机 HTTP 放行配置 |
 | `app/src/test/`、`app/src/androidTest/` | 网络单测、设备路由测试 |
 | `gradle/libs.versions.toml` | 依赖与插件版本统一管理 |
-| `scripts/`、`mobilew` | WSL 环境、模拟器启动、安装与构建入口 |
+| `scripts/`、`mobilew` | WSL 环境、Android Studio Preview、模拟器启动、安装与构建入口 |
 | `.tooling/` | 本机 SDK、JDK、模拟器、依赖缓存及验证文件，已被 Git 忽略 |
 
 没有实现 Cookie 登录；后续登录批次再加入相应会话管理。当前只做轻量手工依赖组装，业务增长后再引入需要的 DI 或多模块拆分。

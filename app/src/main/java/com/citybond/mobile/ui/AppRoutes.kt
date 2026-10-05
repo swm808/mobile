@@ -12,6 +12,7 @@ object AppRoutes {
     const val TASKS = "tasks"
     const val PROFILE = "profile"
     const val CONNECTION = "connection"
+    const val COMBINED_LEDGER = "combined-ledger"
 
     const val FINANCING_OVERVIEW = FINANCING_ROOT
     const val FINANCING_ANNOUNCEMENTS = "$FINANCING_ROOT/announcements"
@@ -35,6 +36,7 @@ object AppRoutes {
         TASKS to "任务",
         PROFILE to "我的",
         CONNECTION to "连接检查",
+        COMBINED_LEDGER to "综合台账",
         FINANCING_OVERVIEW to "融资总览",
         FINANCING_ANNOUNCEMENTS to "公告栏",
         FINANCING_PENDING_ITEMS to "未处理事项",

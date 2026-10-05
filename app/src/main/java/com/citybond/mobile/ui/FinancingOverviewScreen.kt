@@ -1,14 +1,23 @@
 package com.citybond.mobile.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -20,6 +29,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
@@ -43,22 +54,17 @@ internal fun FinancingOverviewScreen(
     var moneyUnit by rememberSaveable { mutableStateOf(OverviewMoneyUnit.HUNDRED_MILLION) }
     var includeSupplementary by rememberSaveable { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text("融资总览", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "集团合并口径 · 数据截至 $today",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+    PageIntro(
+        eyebrow = "经营驾驶舱",
+        title = "融资总览",
+        description = "集团合并口径 · 数据截至 $today",
+    )
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         TextButton(onClick = openAnnouncements, modifier = Modifier.testTag("open_financing_announcements")) {
-            Text("公告")
+            Text("公告栏")
         }
         TextButton(onClick = openPendingItems, modifier = Modifier.testTag("open_financing_pending")) {
-            Text("待办")
+            Text("未处理事项")
         }
     }
 
@@ -71,7 +77,7 @@ internal fun FinancingOverviewScreen(
         ) {
             Text("界面与路由已就绪", style = MaterialTheme.typography.titleMedium)
             Text(
-                "当前尚未接入登录、权限和融资接口，因此数值保持为空；接入后将按服务端口径展示。",
+                "当前尚未接入融资数据接口和分区权限展示，因此数值保持为空；接入后将按服务端口径展示。",
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
         }
@@ -110,7 +116,7 @@ internal fun FinancingOverviewScreen(
         }
     }
 
-    Text("核心指标 · ${moneyUnit.label}", style = MaterialTheme.typography.titleMedium)
+    SectionHeader("核心指标", "当前金额单位：${moneyUnit.label}")
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -142,10 +148,12 @@ internal fun FinancingOverviewScreen(
         )
     }
 
+    SectionHeader("业务视图", "按时间与项目维度继续查看明细")
     FinancingRouteCard(
         title = "未来 6 个月到期本息",
         description = "按月汇总本金与利息，并进入月份明细。",
         action = "查看本月",
+        icon = Icons.AutoMirrored.Outlined.List,
         testTag = "open_financing_repayment_month",
         onClick = { openRepaymentMonth(YearMonth.from(today)) },
     )
@@ -153,6 +161,7 @@ internal fun FinancingOverviewScreen(
         title = "每日融资到账",
         description = "区分计划放款与实际放款，金额由资金速记汇总。",
         action = "查看今日",
+        icon = Icons.Outlined.Home,
         testTag = "open_financing_daily",
         onClick = { openDailyDisbursements(today) },
     )
@@ -160,6 +169,7 @@ internal fun FinancingOverviewScreen(
         title = "融资项目进度",
         description = "查看待审批、待放款、融资中与已完成项目。",
         action = "查看待审批",
+        icon = Icons.Outlined.Menu,
         testTag = "open_financing_pipeline",
         onClick = { openProjectPipeline(FinancingPipelineRoute.APPROVAL_PENDING) },
     )
@@ -186,7 +196,8 @@ private fun OverviewMetricCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -194,7 +205,8 @@ private fun OverviewMetricCard(
         ) {
             Text(title, style = MaterialTheme.typography.labelLarge)
             Text("—", style = MaterialTheme.typography.headlineMedium)
-            Text(note, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            StatusPill("等待数据", StatusTone.NEUTRAL)
+            Text(note, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -204,6 +216,7 @@ private fun FinancingRouteCard(
     title: String,
     description: String,
     action: String,
+    icon: ImageVector,
     testTag: String,
     onClick: () -> Unit,
 ) {
@@ -211,13 +224,32 @@ private fun FinancingRouteCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().testTag(testTag),
     ) {
-        Column(
+        Row(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(action, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Box(modifier = Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp))
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall)
+                Text(action, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+            }
+            Icon(
+                Icons.AutoMirrored.Outlined.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }

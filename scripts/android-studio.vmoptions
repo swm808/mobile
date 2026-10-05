@@ -1,0 +1,2 @@
+# Keep the preview-only IDE within WSL's available memory.
+-Xmx1536m

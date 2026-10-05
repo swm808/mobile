@@ -2,7 +2,7 @@ package com.citybond.mobile.model
 
 import java.time.Instant
 
-// 只定义本地数据形状，不包含联网、数据库或加密存储实现。
+// 领域侧会话形状；正式聊天历史以 CityBond 服务端 Assistant 会话为准。
 data class Conversation(
     val id: String,
     val ownerUserId: String,

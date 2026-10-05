@@ -63,4 +63,5 @@ dependencies {
     androidTestImplementation(libs.compose.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.mockwebserver)
 }

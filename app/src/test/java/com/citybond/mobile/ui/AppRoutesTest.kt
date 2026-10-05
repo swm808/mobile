@@ -27,6 +27,7 @@ class AppRoutesTest {
     fun routeMetadataKeepsFinancingPagesNestedUnderBusiness() {
         assertTrue(AppRoutes.FINANCING_OVERVIEW !in AppRoutes.topLevelRoutes)
         assertEquals("融资总览", AppRoutes.titleFor(AppRoutes.FINANCING_OVERVIEW))
+        assertEquals("综合台账", AppRoutes.titleFor(AppRoutes.COMBINED_LEDGER))
         assertEquals("月份还款明细", AppRoutes.titleFor(AppRoutes.FINANCING_REPAYMENT_MONTH))
         assertEquals(
             FinancingPipelineRoute.DISBURSEMENT_PENDING,

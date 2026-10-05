@@ -13,8 +13,14 @@ import retrofit2.HttpException
 class NetworkClientTest {
     private lateinit var server: MockWebServer
 
-    @Before fun start() { server = MockWebServer().also { it.start() } }
-    @After fun stop() { server.shutdown() }
+    @Before fun start() {
+        NetworkClient.clearSession()
+        server = MockWebServer().also { it.start() }
+    }
+    @After fun stop() {
+        NetworkClient.clearSession()
+        server.shutdown()
+    }
 
     @Test fun healthReadsBackendContractAndIgnoresExtraFields() = runBlocking {
         server.enqueue(MockResponse().setBody("""{"status":"ok","version":"future"}"""))
@@ -45,5 +51,55 @@ class NetworkClientTest {
     @Test fun credentialsAndNonRootAddressesAreRejected() {
         listOf("https://user:secret@example.com/", "https://example.com/api/v1/", "https://example.com/?token=x")
             .forEach { address -> assertThrows(IllegalArgumentException::class.java) { NetworkClient.create(address) } }
+    }
+
+    @Test fun loginCookieIsReusedForAssistantHistory() = runBlocking {
+        server.enqueue(
+            MockResponse()
+                .setHeader("Set-Cookie", "citybond_session=session-123; Path=/; HttpOnly")
+                .setBody(
+                    """{"id":1,"username":"admin","name":"管理员","role_code":"super_admin","permissions":["assistant.view"],"permission_version":2}""",
+                ),
+        )
+        server.enqueue(MockResponse().setBody("[]"))
+        val services = NetworkClient.createCityBond(server.url("/").toString())
+
+        val user = services.auth.login(LoginRequest("admin", "password"))
+        assertEquals("管理员", user.name)
+        assertTrue(services.assistant.conversations().isEmpty())
+
+        val login = server.takeRequest()
+        assertEquals("/api/v1/auth/login", login.path)
+        assertTrue(login.body.readUtf8().contains("\"username\":\"admin\""))
+        val history = server.takeRequest()
+        assertEquals("/api/v1/assistant/conversations", history.path)
+        assertEquals("citybond_session=session-123", history.getHeader("Cookie"))
+    }
+
+    @Test fun assistantConversationUsesServerVersionContract() = runBlocking {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"conversation_id":"c-1","version_no":1,"messages":[]}""",
+            ),
+        )
+        server.enqueue(
+            MockResponse().setBody(
+                """{"conversation_id":"c-1","title":"融资问题","version_no":2,"messages":[{"id":1,"role":"user","content":"什么是综合成本？","created_at":"2026-09-23T00:00:00Z"},{"id":2,"role":"assistant","content":"综合成本用于衡量融资的整体资金成本。","llm_elapsed_ms":1200,"created_at":"2026-09-23T00:00:01Z"}]}""",
+            ),
+        )
+        val api = NetworkClient.createCityBond(server.url("/").toString()).assistant
+
+        val conversation = api.createConversation()
+        val response = api.sendMessage(
+            conversation.conversationId,
+            AssistantConversationMessageRequest("什么是综合成本？", conversation.versionNo),
+        )
+
+        assertEquals(2, response.versionNo)
+        assertEquals("assistant", response.messages.last().role)
+        assertEquals("/api/v1/assistant/conversations", server.takeRequest().path)
+        val messageRequest = server.takeRequest()
+        assertEquals("/api/v1/assistant/conversations/c-1/messages", messageRequest.path)
+        assertTrue(messageRequest.body.readUtf8().contains("\"version_no\":1"))
     }
 }
